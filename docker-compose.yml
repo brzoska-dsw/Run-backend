@@ -1,0 +1,56 @@
+version: '3.7'
+
+services:
+  backend:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "8080:8080"
+    restart: always
+    depends_on:
+      - db
+    environment:
+#      SPRING_DATASOURCE_URL: jdbc:h2:mem:run-back-end
+      SPRING_DATASOURCE_URL: jdbc:mysql://db:3306/upload?createDatabaseIfNotExist=true
+      SPRING_DATASOURCE_USERNAME: root
+      SPRING_DATASOURCE_PASSWORD:
+    networks:
+      - backend-db
+      - backend-frontend
+
+  db:
+    image: mysql:5.7
+    ports:
+      - "3307:3306"
+    restart: always
+    environment:
+      MYSQL_DATABASE: upload
+#      MYSQL_USER: brzoska
+#      MYSQL_PASSWORD: password
+      MYSQL_ROOT_PASSWORD: password
+    volumes:
+      - db-data:/var/lib/mysql
+    networks:
+      - backend-db
+
+  frontend:
+    build:
+      context: ./rundown-app
+      dockerfile: Dockerfile
+      args:
+        - http://localhost:8080
+    ports:
+      - "3000:80"
+    restart: always
+    depends_on:
+      - backend
+    networks:
+      - backend-frontend
+
+networks:
+  backend-frontend:
+  backend-db:
+
+volumes:
+  db-data:
